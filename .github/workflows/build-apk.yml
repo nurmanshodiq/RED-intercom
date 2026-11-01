@@ -1,5 +1,4 @@
 
-
 name: Build RED Intercom APK
 
 on:
@@ -8,7 +7,6 @@ on:
     paths:
       - '*.zip'
       - '.github/workflows/build-apk.yml'
-      - 'app/build.gradle.kts'
 
 jobs:
   build:
@@ -18,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract RED Intercom project
+      - name: Extract RED Intercom
         run: |
           ZIP_FILE=$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)
           if [ -z "$ZIP_FILE" ]; then
@@ -28,7 +26,38 @@ jobs:
           mkdir project
           unzip -q "$ZIP_FILE" -d project
 
-      - name: Set up Java 17
+      - name: Fix Java and Kotlin targets
+        run: |
+          cat > project/app/build.gradle.kts <<'EOF'
+          plugins {
+              id("com.android.application")
+              id("org.jetbrains.kotlin.android")
+          }
+
+          android {
+              namespace = "com.redintercom.app"
+              compileSdk = 35
+
+              defaultConfig {
+                  applicationId = "com.redintercom.app"
+                  minSdk = 26
+                  targetSdk = 28
+                  versionCode = 2
+                  versionName = "1.0-prototype"
+              }
+
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+          EOF
+
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
