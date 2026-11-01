@@ -1,63 +1,27 @@
 
-name: Build RED Intercom APK
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
 
-on:
-  workflow_dispatch:
-  push:
-    paths:
-      - '*.zip'
-      - '.github/workflows/build-apk.yml'
+android {
+    namespace = "com.redintercom.app"
+    compileSdk = 35
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+    defaultConfig {
+        applicationId = "com.redintercom.app"
+        minSdk = 26
+        targetSdk = 28
+        versionCode = 2
+        versionName = "1.0-prototype"
+    }
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 
-      - name: Find and extract RED Intercom project
-        run: |
-          ZIP_FILE=$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)
-
-          if [ -z "$ZIP_FILE" ]; then
-            echo "File ZIP RED Intercom tidak ditemukan"
-            exit 1
-          fi
-
-          mkdir project
-          unzip -q "$ZIP_FILE" -d project
-
-          if [ ! -f project/settings.gradle.kts ]; then
-            echo "File proyek Android tidak ditemukan"
-            exit 1
-          fi
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
-        with:
-          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
-
-      - name: Set up Gradle 8.9
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
-
-      - name: Build RED Intercom APK
-        run: |
-          cd project
-          gradle --no-daemon assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: RED-Intercom-APK
-          path: project/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
