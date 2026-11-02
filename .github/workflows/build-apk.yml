@@ -19,16 +19,24 @@ jobs:
       - name: Extract RED Intercom
         run: |
           ZIP_FILE=$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)
+
           if [ -z "$ZIP_FILE" ]; then
             echo "ZIP proyek tidak ditemukan"
             exit 1
           fi
+
           mkdir project
           unzip -q "$ZIP_FILE" -d project
 
+          if [ ! -f project/rednew/app/build.gradle.kts ]; then
+            echo "File app/build.gradle.kts tidak ditemukan"
+            find project -name build.gradle.kts
+            exit 1
+          fi
+
       - name: Fix Java and Kotlin targets
         run: |
-          cat > project/app/build.gradle.kts <<'EOF'
+          cat > project/rednew/app/build.gradle.kts <<'EOF'
           plugins {
               id("com.android.application")
               id("org.jetbrains.kotlin.android")
@@ -75,12 +83,12 @@ jobs:
 
       - name: Build APK
         run: |
-          cd project
+          cd project/rednew
           gradle --no-daemon assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: RED-Intercom-APK
-          path: project/app/build/outputs/apk/debug/app-debug.apk
+          path: project/rednew/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
